@@ -1,3 +1,4 @@
 input*
 *.in
 target/
+Cargo.lock
