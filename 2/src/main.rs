@@ -29,7 +29,7 @@ fn main() {
     let stdin = io::stdin();
     let mut s = String::new();
     stdin.read_line(&mut s).unwrap();
-    let mut values: Vec<usize> = s
+    let values: Vec<usize> = s
         .split(",")
         .map(|x| {
             let b: usize;
