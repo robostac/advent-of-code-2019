@@ -11,9 +11,8 @@ fn count(x: &String, dict: &HashMap<String, Vec<String>>) -> usize {
 
 fn bfs(start: String, tgt: String, dict: &HashMap<String, Vec<String>>) -> usize {
     let mut current: HashSet<&String> = [&start].iter().cloned().collect();
-    let mut inc = 0;
     let mut seen = HashSet::<&String>::new();
-    while current.is_empty() == false {
+    for inc in 0..dict.keys().count() {
         current = current
             .iter()
             .map(|x| dict[*x].iter().collect())
@@ -27,7 +26,6 @@ fn bfs(start: String, tgt: String, dict: &HashMap<String, Vec<String>>) -> usize
         if seen.contains(&tgt) {
             return inc - 1;
         }
-        inc += 1;
     }
     0
 }
