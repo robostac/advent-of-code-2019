@@ -117,32 +117,14 @@ impl IntComp {
     }
 }
 
-fn permute(comp: &IntComp, used: usize, mut input: [isize; 5], cur: usize) -> isize {
-    if cur == 5 {
-        let mut val = 0;
-        for x in input.iter() {
-            let mut c = comp.clone();
-            c.input.push_back(*x);
-            c.input.push_back(val);
-            c.run();
-            val = c.output[0];
-        }
-        return val;
-    }
-    (0..5)
-        .filter_map(|x| {
-            if used & (1 << x) == 0 {
-                input[cur] = x;
-                Some(permute(comp, used | 1 << x, input, cur + 1))
-            } else {
-                None
-            }
-        })
-        .max()
-        .unwrap()
-}
-
-fn permute2(comp: &IntComp, used: usize, mut input: [isize; 5], cur: usize) -> isize {
+fn permute(
+    comp: &IntComp,
+    used: usize,
+    mut input: [isize; 5],
+    cur: usize,
+    start: isize,
+    end: isize,
+) -> isize {
     if cur == 5 {
         let mut comps: Vec<IntComp> = vec![comp.clone(); 5];
         for i in 0..5 {
@@ -152,18 +134,20 @@ fn permute2(comp: &IntComp, used: usize, mut input: [isize; 5], cur: usize) -> i
         while comps[4].finished == false {
             for x in 0..5 {
                 comps[x].step();
-                let copy = &comps[x].output.clone();
-                comps[(x + 1) % 5].input.extend(copy);
-                comps[x].output.clear();
+                if comps[x].output.is_empty() == false {
+                    let copy = &comps[x].output.clone();
+                    comps[(x + 1) % 5].input.extend(copy);
+                    comps[x].output.clear();
+                }
             }
         }
         return comps[0].input.pop_front().unwrap();
     }
-    (5..10)
+    (start..=end)
         .filter_map(|x| {
             if used & (1 << x) == 0 {
                 input[cur] = x;
-                Some(permute2(comp, used | 1 << x, input, cur + 1))
+                Some(permute(comp, used | 1 << x, input, cur + 1, start, end))
             } else {
                 None
             }
@@ -192,7 +176,7 @@ fn main() {
         output: VecDeque::new(),
         finished: false,
     };
-    println!("{}", permute(&ic, 0, [0, 0, 0, 0, 0], 0));
+    println!("{}", permute(&ic, 0, [0, 0, 0, 0, 0], 0, 0, 4));
 
-    println!("{}", permute2(&ic, 0, [0, 0, 0, 0, 0], 0));
+    println!("{}", permute(&ic, 0, [0, 0, 0, 0, 0], 0, 5, 9));
 }
