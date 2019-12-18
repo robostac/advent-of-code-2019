@@ -19,7 +19,7 @@ impl Ord for State {
         other
             .cost
             .cmp(&self.cost)
-            .then_with(|| self.position.cmp(&other.position))
+            .then_with(|| self.keys.cmp(&other.keys))
     }
 }
 
@@ -83,15 +83,13 @@ fn find_keys(
                         continue;
                     }
                 }
-                if seen.contains(&np) {
-                    continue;
+                if seen.insert(np) {
+                    if key && cur_keys & key_val == 0 {
+                        results.push((np, cur_keys | key_val, count));
+                        continue;
+                    }
+                    next.push(np);
                 }
-                seen.insert(np);
-                if key && cur_keys & key_val == 0 {
-                    results.push((np, cur_keys | key_val, count));
-                    continue;
-                }
-                next.push(np);
             }
         }
         cur = next;
@@ -151,13 +149,12 @@ fn search(grid: &HashMap<(isize, isize), char>, initial: State) -> (usize) {
     let mut best = std::usize::MAX;
     while heap.is_empty() == false {
         let cur = heap.pop().unwrap();
-        if seen.contains(&(cur.position, cur.keys)) {
-            continue;
-        }
         if cur.cost >= best {
             continue;
         }
-        seen.insert((cur.position, cur.keys));
+        if seen.insert((cur.position, cur.keys)) == false {
+            continue;
+        }
         for i in 0..cur.pcount {
             let next_states = find_keys(grid, cur.position[i], cur.keys);
             for x in next_states.iter() {
