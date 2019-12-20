@@ -45,10 +45,29 @@ fn find_by_id(id: String, grid: &HashMap<(isize, isize), isize>) -> Vec<(isize, 
     results
 }
 
+fn generate_others(
+    grid: &HashMap<(isize, isize), isize>,
+) -> HashMap<(isize, isize), (isize, isize, isize)> {
+    let mut results = HashMap::new();
+    let possible = grid.iter().filter(|(_k, v)| **v == '.' as isize);
+    for z in possible {
+        let val = get_id(*z.0, grid);
+        match val {
+            None => (),
+            Some(_p) => {
+                let o = find_other(((z.0).0, (z.0).1, 0), grid);
+                if o != None {
+                    results.insert(*z.0, o.unwrap());
+                }
+            }
+        }
+    }
+    results
+}
+
 fn find_other(
     src: (isize, isize, isize),
     grid: &HashMap<(isize, isize), isize>,
-    use_levels: bool,
 ) -> Option<(isize, isize, isize)> {
     let minx = grid.keys().map(|x| x.0).min().unwrap();
     let miny = grid.keys().map(|x| x.1).min().unwrap();
@@ -70,15 +89,7 @@ fn find_other(
     for x in others {
         if x != srcp {
             let nlevel = src.2 + if outer { 1 } else { -1 };
-            // println!("{:?} {:?} {}", srcp, x, outer);
-            if use_levels {
-                if nlevel > 0 {
-                    return None;
-                }
-                return Some((x.0, x.1, nlevel));
-            } else {
-                return Some((x.0, x.1, src.2));
-            }
+            return Some((x.0, x.1, nlevel));
         }
     }
     None
@@ -89,6 +100,7 @@ fn bfs(
     end: (isize, isize, isize),
     use_levels: bool,
     grid: &HashMap<(isize, isize), isize>,
+    others: &HashMap<(isize, isize), (isize, isize, isize)>,
 ) -> isize {
     let mut cur = vec![start];
     let mut seen = HashSet::new();
@@ -112,11 +124,11 @@ fn bfs(
                     found = true;
                 }
             }
-            let op = find_other(*x, &grid, use_levels);
+            let op = others.get(&(x.0, x.1));
             match op {
                 Some(p) => {
-                    let spv = *grid.get(&(p.0, p.1)).or(Some(&0)).unwrap();
-                    if spv != '.' as isize {
+                    let p = (p.0, p.1, if use_levels { x.2 + p.2 } else { 0 });
+                    if (p.2) > 0 {
                         continue;
                     }
                     if seen.insert(p) {
@@ -155,9 +167,23 @@ fn main() {
         .collect();
     let start = find_by_id("AA".to_owned(), &grid)[0];
     let end = find_by_id("ZZ".to_owned(), &grid)[0];
-    let count = bfs((start.0, start.1, 0), (end.0, end.1, 0), false, &grid);
+    let others = generate_others(&grid);
+
+    let count = bfs(
+        (start.0, start.1, 0),
+        (end.0, end.1, 0),
+        false,
+        &grid,
+        &others,
+    );
     println!("{:?}", count);
 
-    let count = bfs((start.0, start.1, 0), (end.0, end.1, 0), true, &grid);
+    let count = bfs(
+        (start.0, start.1, 0),
+        (end.0, end.1, 0),
+        true,
+        &grid,
+        &others,
+    );
     println!("{:?}", count);
 }
