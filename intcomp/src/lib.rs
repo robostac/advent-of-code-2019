@@ -9,7 +9,7 @@ pub struct IntComp {
     pc: usize,
     rel: isize,
     output: VecDeque<isize>,
-    input: VecDeque<isize>,
+    pub input: VecDeque<isize>,
     finished: bool,
     needs_input: bool,
 }
@@ -135,7 +135,12 @@ impl IntComp {
     pub fn push_input(&mut self, val: isize) {
         self.input.push_back(val);
     }
-
+    pub fn push_input_string(&mut self, val: &str) {
+        for x in val.bytes() {
+            self.push_input(x as isize);
+        }
+        self.push_input(10);
+    }
     pub fn pop_output(&mut self) -> isize {
         self.output.pop_front().unwrap()
     }
@@ -162,6 +167,18 @@ impl IntComp {
             .collect();
         IntComp {
             values: values.iter().cloned().enumerate().collect(),
+            pc: 0,
+            rel: 0,
+            input: VecDeque::new(),
+            output: VecDeque::new(),
+            finished: false,
+            needs_input: false,
+        }
+    }
+
+    pub fn build_from_array(x: &[isize]) -> IntComp {
+        IntComp {
+            values: x.iter().cloned().enumerate().collect(),
             pc: 0,
             rel: 0,
             input: VecDeque::new(),
